@@ -1,0 +1,132 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =============================
+// Usuários da plataforma
+// =============================
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(STUDENT) // ADMIN ou STUDENT
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  purchases    Purchase[]
+  progresses   Progress[]
+  certificates Certificate[]
+}
+
+// =============================
+// Enum de papéis de usuário
+// =============================
+enum Role {
+  ADMIN
+  STUDENT
+}
+
+// =============================
+// Cursos disponíveis na plataforma
+// =============================
+model Course {
+  id           Int      @id @default(autoincrement())
+  title        String
+  description  String
+  price        Float
+  thumbnailUrl String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relacionamentos
+  modules      Module[]
+  purchases    Purchase[]
+  progresses   Progress[]
+  certificates Certificate[]
+}
+
+// =============================
+// Módulos (agrupam aulas dentro de um curso)
+// =============================
+model Module {
+  id       Int    @id @default(autoincrement())
+  title    String
+  order    Int // ordem do módulo no curso
+  courseId Int
+  course   Course @relation(fields: [courseId], references: [id])
+
+  lessons Lesson[]
+}
+
+// =============================
+// Aulas dentro de um módulo
+// =============================
+model Lesson {
+  id       Int     @id @default(autoincrement())
+  title    String
+  videoUrl String // link do vídeo (Vimeo, YouTube ou storage próprio)
+  pdfUrl   String? // material complementar
+  order    Int
+  moduleId Int
+  module   Module  @relation(fields: [moduleId], references: [id])
+}
+
+// =============================
+// Registro de compras
+// =============================
+model Purchase {
+  id        Int           @id @default(autoincrement())
+  userId    Int
+  courseId  Int
+  pricePaid Float
+  paymentId String? // ID do gateway de pagamento (Stripe, etc.)
+  status    PaymentStatus @default(PAID)
+  createdAt DateTime      @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  course Course @relation(fields: [courseId], references: [id])
+}
+
+// =============================
+// Enum de status de pagamento
+// =============================
+enum PaymentStatus {
+  PENDING
+  PAID
+  CANCELED
+}
+
+// =============================
+// Progresso do aluno no curso
+// =============================
+model Progress {
+  id               Int      @id @default(autoincrement())
+  userId           Int
+  courseId         Int
+  completedLessons Int      @default(0)
+  totalLessons     Int
+  updatedAt        DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id])
+  course Course @relation(fields: [courseId], references: [id])
+}
+
+// =============================
+// Certificados emitidos
+// =============================
+model Certificate {
+  id       Int      @id @default(autoincrement())
+  userId   Int
+  courseId Int
+  url      String // link para o PDF do certificado
+  issuedAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  course Course @relation(fields: [courseId], references: [id])
+}
