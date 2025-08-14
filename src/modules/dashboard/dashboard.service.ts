@@ -10,11 +10,11 @@ export class DashboardService {
 
     const progresses = await this.prisma.progress.findMany({
       where: { userId },
-      select: { completedLessons: true, totalLessons: true },
+      select: { completedLessonIds: true, totalLessons: true },
     });
 
     const completedCoursesCount = progresses.filter(
-      (p) => p.completedLessons >= p.totalLessons,
+      (p) => p.completedLessonIds.length >= p.totalLessons,
     ).length;
 
     const totalHours = progresses.reduce((sum, p) => sum + p.totalLessons, 0);

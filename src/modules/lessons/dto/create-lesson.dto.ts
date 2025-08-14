@@ -1,16 +1,16 @@
-import { IsString, IsNumber, IsOptional } from 'class-validator';
+import { IsString, IsOptional, IsUrl, IsInt } from 'class-validator';
 
 export class CreateLessonDto {
   @IsString()
   title: string;
 
-  @IsString()
+  @IsUrl()
   videoUrl: string;
 
   @IsOptional()
-  @IsString()
+  @IsUrl()
   pdfUrl?: string;
 
-  @IsNumber()
+  @IsInt()
   order: number;
 }

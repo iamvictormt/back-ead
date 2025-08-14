@@ -2,8 +2,12 @@ import {
   IsString,
   IsNumber,
   IsOptional,
+  IsUrl,
   IsArray,
   ValidateNested,
+  IsInt,
+  Min,
+  Max,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { CreateModuleDto } from '../../modules/dto/create-module.dto';
@@ -19,12 +23,28 @@ export class CreateCourseDto {
   price: number;
 
   @IsOptional()
-  @IsString()
+  @IsUrl()
   thumbnailUrl?: string;
 
+  @IsString()
+  instructor: string;
+
+  @IsString()
+  category: string;
+
   @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(5)
+  rating?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  studentsCount?: number;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateModuleDto)
-  modules?: CreateModuleDto[];
+  modules: CreateModuleDto[];
 }

@@ -36,13 +36,17 @@ enum Role {
 // Cursos disponíveis na plataforma
 // =============================
 model Course {
-  id           Int      @id @default(autoincrement())
-  title        String
-  description  String
-  price        Float
-  thumbnailUrl String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            Int      @id @default(autoincrement())
+  title         String
+  description   String
+  price         Float
+  thumbnailUrl  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  instructor    String
+  category      String
+  rating        Float    @default(0)
+  studentsCount Int      @default(0)
 
   // Relacionamentos
   modules      Module[]
@@ -106,12 +110,12 @@ enum PaymentStatus {
 // Progresso do aluno no curso
 // =============================
 model Progress {
-  id               Int      @id @default(autoincrement())
-  userId           Int
-  courseId         Int
-  completedLessons Int      @default(0)
-  totalLessons     Int
-  updatedAt        DateTime @updatedAt
+  id                 Int      @id @default(autoincrement())
+  userId             Int
+  courseId           Int
+  completedLessonIds Int[]    @default([])
+  totalLessons       Int
+  updatedAt          DateTime @updatedAt
 
   user   User   @relation(fields: [userId], references: [id])
   course Course @relation(fields: [courseId], references: [id])
