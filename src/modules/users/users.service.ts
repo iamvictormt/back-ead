@@ -8,9 +8,7 @@ export class UsersService {
   constructor(private prisma: PrismaService) {}
 
   async create(name: string, email: string, password: string) {
-    const existingUser = await this.prisma.user.findUnique({
-      where: { email },
-    });
+    const existingUser = await this.findByEmail(email);
     if (existingUser) throw new ConflictException('E-mail já cadastrado');
 
     const hashedPassword = await bcrypt.hash(password, 10);
