@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { CreateCourseDto } from './dto/create-course.dto';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class CoursesService {
@@ -114,7 +115,6 @@ export class CoursesService {
         certificate: certificate
           ? {
               id: certificate.id,
-              url: certificate.url,
               issuedAt: certificate.issuedAt.toISOString(),
             }
           : null,
@@ -194,7 +194,6 @@ export class CoursesService {
       certificate: certificate
         ? {
           id: certificate.id,
-          url: certificate.url,
           issuedAt: certificate.issuedAt.toISOString(),
         }
         : null,
@@ -204,6 +203,14 @@ export class CoursesService {
   }
 
   async markLessonCompleted(userId: number, courseId: number, lessonId: number) {
+    const existingCertificate = await this.prisma.certificate.findFirst({
+      where: { userId, courseId },
+    });
+
+    if(existingCertificate) {
+      throw new ConflictException('O curso já foi concluído!');
+    }
+
     const progress = await this.prisma.progress.findFirst({
       where: { userId, courseId },
     });
@@ -221,13 +228,35 @@ export class CoursesService {
       // Não estava concluída → adicionar
       updatedLessonIds = [...(progress.completedLessonIds || []), lessonId];
     }
-    
-    return this.prisma.progress.update({
+
+    // Atualiza o progresso
+    const updatedProgress = await this.prisma.progress.update({
       where: { id: progress.id },
       data: {
         completedLessonIds: updatedLessonIds,
       },
     });
+
+    // Se todas as aulas estiverem concluídas, cria o certificado
+    if (updatedProgress.completedLessonIds.length === updatedProgress.totalLessons) {
+      // Verifica se já existe certificado para evitar duplicidade
+
+
+      if (!existingCertificate) {
+        const token = randomBytes(16).toString('hex');
+
+        const certificate = await this.prisma.certificate.create({
+          data: {
+            userId,
+            courseId,
+            token
+          },
+        });
+        return { progress: updatedProgress, certificate };
+      }
+    }
+
+    return { progress: updatedProgress };
   }
 
   async findCoursesAvailableForPurchase(userId: number) {

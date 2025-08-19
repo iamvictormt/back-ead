@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Certificado de Conclusão</title>
+  <style>
+      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Dancing+Script:wght@400;600;700&display=swap');
+
+      * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+      }
+
+      @page {
+          size: A4 landscape;
+          margin: 0;
+      }
+
+      body {
+          font-family: 'Crimson Text', serif;
+          background: white;
+          width: 297mm;
+          height: 210mm;
+          margin: 0 auto;
+          position: relative;
+          overflow: hidden;
+      }
+
+      .certificate {
+          width: 100%;
+          height: 100%;
+          position: relative;
+          background: white;
+          padding: 20mm;
+      }
+
+      /* Bordas decorativas onduladas */
+      .border-decoration {
+          position: absolute;
+          background: linear-gradient(135deg, #7dd3fc, #38bdf8, #0ea5e9);
+          opacity: 0.8;
+      }
+
+      /* Borda superior */
+      .border-top {
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 15mm;
+          clip-path: polygon(0 0, 100% 0, 100% 60%, 95% 80%, 90% 60%, 85% 80%, 80% 60%, 75% 80%, 70% 60%, 65% 80%, 60% 60%, 55% 80%, 50% 60%, 45% 80%, 40% 60%, 35% 80%, 30% 60%, 25% 80%, 20% 60%, 15% 80%, 10% 60%, 5% 80%, 0 60%);
+      }
+
+      /* Borda inferior */
+      .border-bottom {
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: 15mm;
+          clip-path: polygon(0 40%, 5% 20%, 10% 40%, 15% 20%, 20% 40%, 25% 20%, 30% 40%, 35% 20%, 40% 40%, 45% 20%, 50% 40%, 55% 20%, 60% 40%, 65% 20%, 70% 40%, 75% 20%, 80% 40%, 85% 20%, 90% 40%, 95% 20%, 100% 40%, 100% 100%, 0 100%);
+      }
+
+      /* Bordas laterais */
+      .border-left {
+          top: 0;
+          left: 0;
+          bottom: 0;
+          width: 15mm;
+          clip-path: polygon(0 0, 60% 0, 80% 5%, 60% 10%, 80% 15%, 60% 20%, 80% 25%, 60% 30%, 80% 35%, 60% 40%, 80% 45%, 60% 50%, 80% 55%, 60% 60%, 80% 65%, 60% 70%, 80% 75%, 60% 80%, 80% 85%, 60% 90%, 80% 95%, 60% 100%, 0 100%);
+      }
+
+      .border-right {
+          top: 0;
+          right: 0;
+          bottom: 0;
+          width: 15mm;
+          clip-path: polygon(40% 0, 100% 0, 100% 100%, 40% 100%, 20% 95%, 40% 90%, 20% 85%, 40% 80%, 20% 75%, 40% 70%, 20% 65%, 40% 60%, 20% 55%, 40% 50%, 20% 45%, 40% 40%, 20% 35%, 40% 30%, 20% 25%, 40% 20%, 20% 15%, 40% 10%, 20% 5%);
+      }
+
+      /* Borda interna */
+      .inner-border {
+          position: absolute;
+          top: 18mm;
+          left: 18mm;
+          right: 18mm;
+          bottom: 18mm;
+          border: 2px solid #0ea5e9;
+          border-radius: 4px;
+      }
+
+      /* Conteúdo principal */
+      .content {
+          position: relative;
+          z-index: 10;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          padding: 10mm 30mm 20mm 30mm;
+      }
+
+      .header {
+          text-align: center;
+          margin-bottom: 10mm;
+      }
+
+      .title {
+          font-family: 'Playfair Display', serif;
+          font-size: 36px;
+          font-weight: 700;
+          color: #374151;
+          letter-spacing: 4px;
+          margin-bottom: 8px;
+      }
+
+      .subtitle {
+          font-size: 14px;
+          color: #6b7280;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+      }
+
+      .main-content {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          text-align: center;
+          max-width: 180mm;
+          margin: 0 auto;
+      }
+
+      .certification-text {
+          font-size: 16px;
+          color: #374151;
+          line-height: 1.6;
+          margin-bottom: 1mm;
+      }
+
+      .student-name {
+          font-family: 'Playfair Display', serif;
+          font-size: 32px;
+          font-weight: 600;
+          color: #1f2937;
+          margin: 10mm 0;
+          padding-bottom: 5mm;
+          display: inline-block;
+      }
+
+      .course-info {
+          font-size: 16px;
+          color: #374151;
+          line-height: 1.6;
+          margin-bottom: 10mm;
+      }
+
+      .completion-date {
+          font-size: 14px;
+          color: #6b7280;
+          margin-bottom: 5mm;
+      }
+
+      .verification-code {
+          font-size: 12px;
+          color: #9ca3af;
+          font-family: 'Courier New', monospace;
+          margin-top: 15mm;
+      }
+
+      .footer {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-end;
+          margin-top: 15mm;
+      }
+
+      .signature-section {
+          text-align: center;
+          width: 100%;
+      }
+
+      .signature-line {
+          height: 15mm;
+          position: relative;
+      }
+
+      /* Adicionando estilo para assinatura manuscrita */
+      .signature-handwritten {
+          position: absolute;
+          bottom: 2mm;
+          left: 50%;
+          transform: translateX(-50%);
+          font-family: 'Dancing Script', cursive;
+          font-size: 24px;
+          font-weight: 600;
+          color: #1f2937;
+          transform: translateX(-50%) rotate(-2deg);
+      }
+
+      .signature-title {
+          font-size: 12px;
+          color: #6b7280;
+          font-style: italic;
+      }
+
+      /* Ajustando marca d'água para aparecer no PDF */
+      .watermark {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%) rotate(-45deg);
+          font-family: 'Playfair Display', serif;
+          font-size: 120px;
+          font-weight: 700;
+          color: #e5e7eb;
+          opacity: 0.03;
+          z-index: 1;
+          pointer-events: none;
+          letter-spacing: 8px;
+      }
+
+      @media print {
+          body {
+              width: 297mm;
+              height: 210mm;
+          }
+
+          .certificate {
+              page-break-inside: avoid;
+          }
+
+          /* Garantindo que a marca d'água apareça na impressão/PDF */
+          .watermark {
+              opacity: 0.15 !important;
+              color: #d1d5db !important;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+          }
+      }
+  </style>
+</head>
+<body>
+<div class="certificate">
+  <!-- Adicionando elemento de marca d'água -->
+  <div class="watermark">CERTIFICADO</div>
+
+  <!-- Bordas decorativas -->
+  <div class="border-decoration border-top"></div>
+  <div class="border-decoration border-bottom"></div>
+  <div class="border-decoration border-left"></div>
+  <div class="border-decoration border-right"></div>
+  <div class="inner-border"></div>
+
+  <div class="content">
+    <div class="header">
+      <h1 class="title">CERTIFICADO</h1>
+      <p class="subtitle">DE CONCLUSÃO</p>
+    </div>
+
+    <div class="main-content">
+      <p class="certification-text">
+        Certificamos que
+      </p>
+
+      <div class="student-name">[Nome do Aluno]</div>
+
+      <p class="course-info">
+        concluiu com sucesso o curso<br>
+        <strong>[Nome do Curso]</strong>.
+      </p>
+
+      <p class="completion-date">
+        Concluído em: <strong>[Data de Conclusão]</strong>
+      </p>
+
+
+
+      <div class="footer">
+        <div class="signature-section">
+          <div class="signature-line">
+            <!-- Adicionando assinatura manuscrita dentro da linha -->
+            <div class="signature-handwritten">Vanildo Fernandes</div>
+          </div>
+          <p class="signature-title">Instrutor</p>
+        </div>
+      </div>
+
+      <p class="verification-code">
+        Código de verificação: [Codigo de verificação]
+      </p>
+    </div>
+  </div>
+</div>
+</body>
+</html>

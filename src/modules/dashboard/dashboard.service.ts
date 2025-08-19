@@ -96,7 +96,6 @@ export class DashboardService {
           course.certificates.length > 0
             ? {
                 id: course.certificates[0].id,
-                url: course.certificates[0].url,
                 issuedAt: course.certificates[0].issuedAt.toISOString(),
               }
             : null,
