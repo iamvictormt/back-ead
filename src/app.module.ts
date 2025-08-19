@@ -6,6 +6,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { CoursesModule } from './modules/courses/courses.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { CertificatesModule } from './modules/certificates/certificates.module';
+import { CommentModule } from './modules/comments/comments.module';
 
 @Module({
   imports: [
@@ -15,7 +16,8 @@ import { CertificatesModule } from './modules/certificates/certificates.module';
     AuthModule,
     CoursesModule,
     DashboardModule,
-    CertificatesModule
+    CertificatesModule,
+    CommentModule
   ],
 })
 export class AppModule {}
