@@ -259,24 +259,67 @@ export class CoursesService {
     return { progress: updatedProgress };
   }
 
-  async findCoursesAvailableForPurchase(userId: number) {
+  async findCoursesAvailableForPurchase(
+    userId: number,
+    params?: {
+      search?: string;
+      category?: string;
+      priceRange?: string;
+      page?: number;
+      limit?: number;
+    }
+  ) {
+    const { search, category, priceRange, page = 1, limit = 10 } = params || {};
+
+    // Busca os cursos já comprados pelo usuário
     const purchasedCourses = await this.prisma.purchase.findMany({
       where: { userId, status: 'PAID' },
       select: { courseId: true },
     });
-    const purchasedCourseIds = purchasedCourses.map(
-      (pc: { courseId: any }) => pc.courseId,
-    );
 
-    return this.prisma.course.findMany({
-      where: {
-        id: {
-          notIn: purchasedCourseIds.length > 0 ? purchasedCourseIds : [0],
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    const purchasedCourseIds = purchasedCourses.map((pc) => pc.courseId);
+
+    // Filtro de preço
+    let priceFilter: any = {};
+    if (priceRange) {
+      const [min, max] = priceRange.split('-').map(Number);
+      priceFilter = {
+        gte: isNaN(min) ? undefined : min,
+        lte: isNaN(max) ? undefined : max,
+      };
+    }
+
+    // Condições dinâmicas
+    const where: any = {
+      id: { notIn: purchasedCourseIds.length > 0 ? purchasedCourseIds : [0] },
+      ...(search && { title: { contains: search, mode: 'insensitive' } }),
+      ...(category && { category }),
+      ...(priceRange && { price: priceFilter }),
+    };
+
+    // Paginação
+    const skip = (page - 1) * limit;
+    const take = limit;
+
+    // Busca principal
+    const [courses, total] = await this.prisma.$transaction([
+      this.prisma.course.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take,
+      }),
+      this.prisma.course.count({ where }),
+    ]);
+
+    return {
+      courses,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
   }
+
 
   async enrollStudent(userId: number, courseId: number, pricePaid: number) {
     // Cria a compra
