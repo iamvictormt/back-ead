@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ValidationPipe } from '@nestjs/common';
+import { BadRequestException, ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -26,8 +26,30 @@ async function bootstrap() {
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
+      exceptionFactory: (errors) => {
+        // Extrai apenas as mensagens
+        const messages = flattenErrors(errors);
+        return new BadRequestException({ message: messages });
+      },
     }),
   );
+
+  function flattenErrors(errors: any[]): string[] {
+    let result: string[] = [];
+
+    errors.forEach(err => {
+      if (err.constraints) {
+        const constraints = err.constraints as Record<string, string>;
+        result.push(...Object.values(constraints));
+      }
+      if (err.children && err.children.length > 0) {
+        result.push(...flattenErrors(err.children));
+      }
+    });
+
+    return result;
+  }
+
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, document);

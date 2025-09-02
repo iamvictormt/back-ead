@@ -37,17 +37,18 @@ enum Role {
 // Cursos disponíveis na plataforma
 // =============================
 model Course {
-  id            Int      @id @default(autoincrement())
+  id            Int       @id @default(autoincrement())
   title         String
   description   String
   price         Float
   thumbnailUrl  String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
   instructor    String
   category      String
-  rating        Float    @default(0)
-  studentsCount Int      @default(0)
+  rating        Float     @default(0)
+  studentsCount Int       @default(0)
+  deactivatedIn DateTime?
 
   // Relacionamentos
   modules      Module[]
@@ -79,7 +80,7 @@ model Lesson {
   pdfUrl   String? // material complementar
   order    Int
   moduleId Int
-  module   Module    @relation(fields: [moduleId], references: [id])
+  module   Module    @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   comments Comment[]
 }
 

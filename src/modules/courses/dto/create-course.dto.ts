@@ -23,7 +23,7 @@ export class CreateCourseDto {
   price: number;
 
   @IsOptional()
-  @IsUrl()
+  @IsUrl(undefined, { message: 'O campo URL da Imagem de Capa deve ser uma URL válida' })
   thumbnailUrl?: string;
 
   @IsString()

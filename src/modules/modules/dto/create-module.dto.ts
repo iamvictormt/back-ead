@@ -1,8 +1,12 @@
-import { IsString, IsArray, ValidateNested, IsInt } from 'class-validator';
+import { IsString, IsArray, ValidateNested, IsInt, IsOptional } from 'class-validator';
 import { CreateLessonDto } from '../../lessons/dto/create-lesson.dto';
 import { Type } from 'class-transformer';
 
 export class CreateModuleDto {
+  @IsInt()
+  @IsOptional()
+  id: number;
+
   @IsString()
   title: string;
 

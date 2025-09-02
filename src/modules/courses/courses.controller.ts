@@ -4,7 +4,8 @@ import {
   Get,
   NotFoundException,
   Param,
-  ParseIntPipe, Patch,
+  ParseIntPipe,
+  Patch,
   Post,
   Req,
   UseGuards,
@@ -13,6 +14,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { CoursesService } from './courses.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { Role } from '../../decorators/role.decorator';
+import { UpdateCourseDto } from './dto/update-course.dto';
 
 @Controller('courses')
 export class CoursesController {
@@ -26,9 +28,16 @@ export class CoursesController {
   }
 
   @UseGuards(AuthGuard('jwt'))
+  @Role('ADMIN')
+  @Patch(':id')
+  async update(@Param('id') id: number, @Body() dto: UpdateCourseDto) {
+    return this.coursesService.updateCourse(id, dto);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
   @Get('available')
   async getAvailableCourses(@Req() req) {
-    const userId = req.user.userId;
+    const userId = Number(req.user.userId);
     return this.coursesService.findCoursesAvailableForPurchase(userId);
   }
 
@@ -37,6 +46,27 @@ export class CoursesController {
   async getMyCourses(@Req() req) {
     const userId = req.user.userId;
     return this.coursesService.findMyCourses(userId);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Role('ADMIN')
+  @Get()
+  async getAllCourses() {
+    return this.coursesService.findAllCourses();
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Role('ADMIN')
+  @Get(':id')
+  async getCourse(@Param('id', ParseIntPipe) id: number) {
+    return this.coursesService.findOne(id);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Role('ADMIN')
+  @Patch(':id/deactivate')
+  async deactivateCourse(@Param('id', ParseIntPipe) id: number) {
+    return this.coursesService.deactivateCourse(id);
   }
 
   @UseGuards(AuthGuard('jwt'))
