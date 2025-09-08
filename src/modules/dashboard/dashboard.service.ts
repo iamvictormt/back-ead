@@ -157,6 +157,7 @@ export class DashboardService {
         profilePic: true,
         createdAt: true,
       },
+      where: { role: 'STUDENT' },
     });
 
     // Total de alunos
