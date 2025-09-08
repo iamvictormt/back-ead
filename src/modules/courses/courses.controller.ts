@@ -70,6 +70,13 @@ export class CoursesController {
   }
 
   @UseGuards(AuthGuard('jwt'))
+  @Role('ADMIN')
+  @Patch(':id/reactivate')
+  async reactivateCourse(@Param('id', ParseIntPipe) id: number) {
+    return this.coursesService.reactivateCourse(id);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
   @Get('my-courses/:courseId')
   async getMyCourse(
     @Req() req,

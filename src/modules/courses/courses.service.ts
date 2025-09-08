@@ -472,9 +472,14 @@ export class CoursesService {
   async deactivateCourse(id: number) {
     return this.prisma.course.update({
       where: { id },
-      data: {
-        deactivatedIn: new Date(),
-      },
+      data: { deactivatedIn: new Date() },
+    });
+  }
+
+  async reactivateCourse(id: number) {
+    return this.prisma.course.update({
+      where: { id },
+      data: { deactivatedIn: null },
     });
   }
 }

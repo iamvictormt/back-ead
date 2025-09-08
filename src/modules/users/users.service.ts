@@ -28,11 +28,12 @@ export class UsersService {
       }
     }
 
+    const { email, ...safeData } = dto;
+
     return this.prisma.user.update({
       where: { id: userId },
       data: {
-        name: dto.name,
-        email: dto.email,
+        ...safeData,
         updatedAt: new Date(),
       },
     });
@@ -47,7 +48,7 @@ export class UsersService {
     if (!user) throw new Error('Usuário não encontrado');
 
     const isMatch = await bcrypt.compare(oldPassword, user.password);
-    if (!isMatch) throw new Error('Senha antiga incorreta');
+    if (!isMatch) throw new Error('A senha atual fornecida não confere. Verifique e tente novamente.');
 
     const newHashedPassword = await bcrypt.hash(newPassword, 10);
 
@@ -84,6 +85,11 @@ export class UsersService {
         id: true,
         name: true,
         email: true,
+        profilePic: true,
+        country: true,
+        birthDate: true,
+        city: true,
+        phone: true,
         createdAt: true,
         role: true
       },
