@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { startOfMonth, endOfMonth } from 'date-fns';
 
 type RecentActivity =
   | {
@@ -144,4 +145,74 @@ export class DashboardService {
 
     return { stats, courses, recentActivity };
   }
+
+  async getDashboardAdmin() {
+    // Últimos 5 usuários cadastrados
+    const recentUsers = await this.prisma.user.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      select: {
+        name: true,
+        email: true,
+        profilePic: true,
+        createdAt: true,
+      },
+    });
+
+    // Total de alunos
+    const totalStudents = await this.prisma.user.count({
+      where: { role: 'STUDENT' },
+    });
+
+    // Cursos ativos (não desativados)
+    const activeCourses = await this.prisma.course.count({
+      where: { deactivatedIn: null },
+    });
+
+    // Receita do mês atual
+    const now = new Date();
+    const firstDay = startOfMonth(now);
+    const lastDay = endOfMonth(now);
+
+    const monthlyRevenueAggregate = await this.prisma.purchase.aggregate({
+      _sum: { pricePaid: true },
+      where: {
+        status: 'PAID',
+        createdAt: { gte: firstDay, lte: lastDay },
+      },
+    });
+
+    const monthlyRevenue = monthlyRevenueAggregate._sum.pricePaid || 0;
+
+    // Total de compras
+    const totalPurchases = await this.prisma.purchase.count();
+
+    // Cursos mais vendidos
+    const topCourses = await this.prisma.purchase.groupBy({
+      by: ['courseId'],
+      _count: { courseId: true },
+      orderBy: { _count: { courseId: 'desc' } },
+      take: 5,
+    });
+
+    const topCoursesWithTitle = await Promise.all(
+      topCourses.map(async (t) => {
+        const course = await this.prisma.course.findUnique({
+          where: { id: t.courseId },
+          select: { title: true },
+        });
+        return { ...t, title: course?.title };
+      }),
+    );
+
+    return {
+      recentUsers,
+      totalStudents,
+      activeCourses,
+      monthlyRevenue,
+      totalPurchases,
+      topCourses: topCoursesWithTitle,
+    };
+  }
+
 }
