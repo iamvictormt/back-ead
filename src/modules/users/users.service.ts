@@ -48,7 +48,10 @@ export class UsersService {
     if (!user) throw new Error('Usuário não encontrado');
 
     const isMatch = await bcrypt.compare(oldPassword, user.password);
-    if (!isMatch) throw new Error('A senha atual fornecida não confere. Verifique e tente novamente.');
+    if (!isMatch)
+      throw new Error(
+        'A senha atual fornecida não confere. Verifique e tente novamente.',
+      );
 
     const newHashedPassword = await bcrypt.hash(newPassword, 10);
 
@@ -67,7 +70,6 @@ export class UsersService {
         },
       },
     });
-
   }
 
   findAll() {
@@ -91,8 +93,41 @@ export class UsersService {
         city: true,
         phone: true,
         createdAt: true,
-        role: true
+        role: true,
       },
     });
+  }
+
+  async getAllUsers(page: number, limit: number) {
+    const skip = (page - 1) * limit;
+
+    const [users, total] = await Promise.all([
+      this.prisma.user.findMany({
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          profilePic: true,
+          role: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        where: {
+          role: 'STUDENT'
+        }
+      }),
+      this.prisma.user.count({
+        where: { role: 'STUDENT' },
+      }),
+    ]);
+
+    return {
+      users,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 }

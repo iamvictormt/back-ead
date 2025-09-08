@@ -396,39 +396,74 @@ export class CoursesService {
     };
   }
 
-  async enrollStudent(userId: number, courseId: number, pricePaid: number) {
-    // Cria a compra
-    const purchase = await this.prisma.purchase.create({
-      data: {
-        userId,
-        courseId,
-        pricePaid,
-        status: 'PAID', // ou PENDING se quiser confirmar pagamento
-      },
-    });
-
-    // Cria registro de progresso inicial
-    const course = await this.prisma.course.findUnique({
-      where: { id: courseId },
-      include: { modules: { include: { lessons: true } } },
-    });
-
-    if (!course) return;
-
+// Método interno para criar progresso
+  private async createProgress(userId: number, course: any) {
     const totalLessons = course.modules.reduce(
       (sum, module) => sum + module.lessons.length,
-      0,
+      0
     );
 
-    await this.prisma.progress.create({
+    return this.prisma.progress.create({
       data: {
         userId,
-        courseId,
+        courseId: course.id,
         completedLessonIds: [],
         totalLessons,
       },
     });
+  }
 
+// Verifica se o usuário já está matriculado
+  private async checkAlreadyEnrolled(userId: number, courseId: number) {
+    const existing = await this.prisma.purchase.findFirst({
+      where: { userId, courseId },
+    });
+
+    if (existing) {
+      throw new ConflictException('Usuário já está matriculado neste curso');
+    }
+  }
+
+// Matrícula via compra
+  async enrollStudentPurchase(userId: number, courseId: number, pricePaid: number) {
+    await this.checkAlreadyEnrolled(userId, courseId);
+
+    const course = await this.prisma.course.findUnique({
+      where: { id: courseId },
+      include: { modules: { include: { lessons: true } } },
+    });
+    if (!course) throw new Error('Curso não encontrado');
+
+    if (pricePaid === 0 && course.price > 0) {
+      throw new Error('O curso não é gratuito');
+    }
+    if (pricePaid > 0 && course.price !== pricePaid) {
+      throw new Error('O valor pago não corresponde ao preço do curso');
+    }
+
+    const purchase = await this.prisma.purchase.create({
+      data: { userId, courseId, pricePaid, status: 'PAID' },
+    });
+
+    await this.createProgress(userId, course);
+    return purchase;
+  }
+
+// Matrícula como presente do admin
+  async enrollStudentGift(userId: number, courseId: number) {
+    await this.checkAlreadyEnrolled(userId, courseId);
+
+    const course = await this.prisma.course.findUnique({
+      where: { id: courseId },
+      include: { modules: { include: { lessons: true } } },
+    });
+    if (!course) throw new Error('Curso não encontrado');
+
+    const purchase = await this.prisma.purchase.create({
+      data: { userId, courseId, pricePaid: 0, status: 'PAID' },
+    });
+
+    await this.createProgress(userId, course);
     return purchase;
   }
 

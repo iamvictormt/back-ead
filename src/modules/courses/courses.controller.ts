@@ -97,15 +97,26 @@ export class CoursesController {
     return course;
   }
 
-  @Post('enroll')
-  async enrollStudent(
-    @Body() body: { userId: number; courseId: number; pricePaid: number },
+  @Post(':courseId/enroll')
+  async enrollPurchase(
+    @Param('courseId', ParseIntPipe) courseId: number,
+    @Body('userId', ParseIntPipe) userId: number,
+    @Body('pricePaid') pricePaid: number,
   ) {
-    return this.coursesService.enrollStudent(
-      body.userId,
-      body.courseId,
-      body.pricePaid,
+    return this.coursesService.enrollStudentPurchase(
+      userId,
+      courseId,
+      pricePaid,
     );
+  }
+
+  @Role('ADMIN')
+  @Post(':courseId/gift')
+  async enrollGift(
+    @Param('courseId', ParseIntPipe) courseId: number,
+    @Body('userId', ParseIntPipe) userId: number,
+  ) {
+    return this.coursesService.enrollStudentGift(userId, courseId);
   }
 
   @UseGuards(AuthGuard('jwt'))

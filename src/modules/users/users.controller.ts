@@ -4,7 +4,7 @@ import {
   Controller,
   Get,
   Param,
-  Patch,
+  Patch, Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -12,15 +12,25 @@ import { UsersService } from './users.service';
 import { AuthGuard } from '@nestjs/passport';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { Role } from '../../decorators/role.decorator';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Get()
-  findAll() {
-    return this.usersService.findAll();
+  @UseGuards(AuthGuard('jwt'))
+  @Role('ADMIN')
+  @Get('')
+  async getAllUsers(
+    @Query('page') page: string,
+    @Query('limit') limit: string,
+  ) {
+    const pageNumber = parseInt(page) || 1;
+    const pageSize = parseInt(limit) || 20;
+
+    return this.usersService.getAllUsers(pageNumber, pageSize);
   }
+
 
   @Get(':id')
   findOne(@Param('id') id: string) {
