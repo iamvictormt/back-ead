@@ -1,10 +1,11 @@
 import {
   BadRequestException,
   Body,
-  Controller,
+  Controller, Delete, ForbiddenException,
   Get,
   Param,
-  Patch, Query,
+  Patch,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -31,6 +32,26 @@ export class UsersController {
     return this.usersService.getAllUsers(pageNumber, pageSize);
   }
 
+  @UseGuards(AuthGuard('jwt'))
+  @Role('ADMIN')
+  @Get('admins')
+  async getAllAdmins(@Req() req) {
+    return this.usersService.getAllAdmins(req.user.userId);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Role('ADMIN')
+  @Delete('admins/:id')
+  async deleteAdmin(@Param('id') id: string, @Req() req) {
+    const currentUserId = Number(req.user.sub);
+    const targetUserId = Number(id);
+
+    if (currentUserId === targetUserId) {
+      throw new ForbiddenException('Você não pode excluir a si mesmo.');
+    }
+
+    return this.usersService.deleteAdmin(targetUserId);
+  }
 
   @Get(':id')
   findOne(@Param('id') id: string) {

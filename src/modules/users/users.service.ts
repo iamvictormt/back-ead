@@ -1,4 +1,4 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -7,14 +7,14 @@ import { UpdateUserDto } from './dto/update-user.dto';
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
-  async create(name: string, email: string, password: string) {
+  async create(name: string, email: string, password: string, isAdmin: boolean = false) {
     const existingUser = await this.findByEmail(email);
     if (existingUser) throw new ConflictException('E-mail já cadastrado');
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     return this.prisma.user.create({
-      data: { name, email, password: hashedPassword },
+      data: { name, email, password: hashedPassword, role: isAdmin ? 'ADMIN' : 'STUDENT' },
     });
   }
 
@@ -130,4 +130,33 @@ export class UsersService {
       totalPages: Math.ceil(total / limit),
     };
   }
+
+  async getAllAdmins(currentUserId: number) {
+    return this.prisma.user.findMany({
+      where: {
+        role: 'ADMIN',
+        id: { not: currentUserId },
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        createdAt: true,
+      },
+    });
+  }
+
+  async deleteAdmin(adminId: number) {
+    const user = await this.prisma.user.findUnique({ where: { id: adminId } });
+
+    if (!user || user.role !== 'ADMIN') {
+      throw new NotFoundException('Admin não encontrado');
+    }
+
+    return this.prisma.user.delete({
+      where: { id: adminId },
+    });
+  }
+
 }

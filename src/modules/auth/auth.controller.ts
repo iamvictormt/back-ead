@@ -2,6 +2,7 @@ import { BadRequestException, Body, Controller, Get, Post, Req, UseGuards } from
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { AuthGuard } from '@nestjs/passport';
+import { Role } from '../../decorators/role.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -15,6 +16,14 @@ export class AuthController {
     @Body() body: { name: string; email: string; password: string },
   ) {
     return this.usersService.create(body.name, body.email, body.password);
+  }
+
+  @Post('register-admin')
+  @Role('ADMIN')
+  async registerAdmin(
+    @Body() body: { name: string; email: string; password: string },
+  ) {
+    return this.usersService.create(body.name, body.email, body.password, true);
   }
 
   @Post('login')
