@@ -58,14 +58,28 @@ export class CoursesService {
         category: dto.category,
         rating: dto.rating ?? 0,
         studentsCount: dto.studentsCount ?? 0,
+
         modules: {
-          // Processa cada módulo enviado
+          // 🔹 Apaga módulos que não estão mais no dto
+          deleteMany: {
+            courseId: id,
+            id: { notIn: dto.modules.filter(m => m.id).map(m => m.id) },
+          },
+
+          // 🔹 Atualiza ou cria os módulos que vieram
           upsert: dto.modules.map((m) => ({
-            where: { id: m.id ?? 0 }, // se não tiver id, cria novo
+            where: { id: m.id ?? 0 },
             update: {
               title: m.title,
               order: m.order,
               lessons: {
+                // 🔹 Apaga lessons que não estão mais no módulo
+                deleteMany: {
+                  moduleId: m.id ?? 0,
+                  id: { notIn: m.lessons.filter(l => l.id).map(l => l.id) },
+                },
+
+                // 🔹 Atualiza ou cria os lessons que vieram
                 upsert: m.lessons.map((l) => ({
                   where: { id: l.id ?? 0 },
                   update: {
