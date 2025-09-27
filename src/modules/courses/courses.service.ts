@@ -47,7 +47,7 @@ export class CoursesService {
   }
 
   async updateCourse(id: number, dto: UpdateCourseDto) {
-    return this.prisma.course.update({
+    const updatedCourse = await this.prisma.course.update({
       where: { id },
       data: {
         title: dto.title,
@@ -60,26 +60,20 @@ export class CoursesService {
         studentsCount: dto.studentsCount ?? 0,
 
         modules: {
-          // 🔹 Apaga módulos que não estão mais no dto
           deleteMany: {
             courseId: id,
             id: { notIn: dto.modules.filter(m => m.id).map(m => m.id) },
           },
-
-          // 🔹 Atualiza ou cria os módulos que vieram
           upsert: dto.modules.map((m) => ({
             where: { id: m.id ?? 0 },
             update: {
               title: m.title,
               order: m.order,
               lessons: {
-                // 🔹 Apaga lessons que não estão mais no módulo
                 deleteMany: {
                   moduleId: m.id ?? 0,
                   id: { notIn: m.lessons.filter(l => l.id).map(l => l.id) },
                 },
-
-                // 🔹 Atualiza ou cria os lessons que vieram
                 upsert: m.lessons.map((l) => ({
                   where: { id: l.id ?? 0 },
                   update: {
@@ -118,23 +112,37 @@ export class CoursesService {
         },
       },
     });
+
+    // 🔹 Atualiza o totalLessons de todos os progress do curso
+    const totalLessons = updatedCourse.modules.reduce(
+      (acc, mod) => acc + mod.lessons.length,
+      0
+    );
+
+    await this.prisma.progress.updateMany({
+      where: { courseId: id },
+      data: { totalLessons },
+    });
+
+    return updatedCourse;
   }
 
   async findMyCourses(userId: number, page = 1, limit = 10) {
-    // Contagem total de compras
     const total = await this.prisma.purchase.count({ where: { userId } });
     const totalPages = Math.ceil(total / limit);
     const skip = (page - 1) * limit;
 
-    // Busca com paginação
     const purchases = await this.prisma.purchase.findMany({
       where: { userId },
       include: {
         course: {
           include: {
             modules: {
+              orderBy: { order: 'asc' }, // <-- ordena módulos
               include: {
-                lessons: true,
+                lessons: {
+                  orderBy: { order: 'asc' }, // <-- ordena aulas
+                },
               },
             },
             progresses: true,
@@ -149,7 +157,6 @@ export class CoursesService {
 
     const courses = purchases.map((purchase) => {
       const course = purchase.course;
-
       const progress = course.progresses.find((p) => p.userId === userId);
       const completedLessons = progress?.completedLessonIds.length ?? 0;
       const totalLessons = progress?.totalLessons ?? 0;
@@ -193,9 +200,9 @@ export class CoursesService {
         })),
         certificate: certificate
           ? {
-              id: certificate.id,
-              issuedAt: certificate.issuedAt.toISOString(),
-            }
+            id: certificate.id,
+            issuedAt: certificate.issuedAt.toISOString(),
+          }
           : null,
         rating: course.rating,
         studentsCount: course.studentsCount,
@@ -499,7 +506,12 @@ export class CoursesService {
       where: { id },
       include: {
         modules: {
-          include: { lessons: true },
+          orderBy: { order: 'asc' }, // ordena os módulos pelo order
+          include: {
+            lessons: {
+              orderBy: { order: 'asc' }, // ordena as aulas pelo order
+            },
+          },
         },
       },
     });
