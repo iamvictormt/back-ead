@@ -41,6 +41,11 @@ export class CoursesController {
     return this.coursesService.findCoursesAvailableForPurchase(userId);
   }
 
+  @Get('active')
+  async getActiveCourses(@Req() req) {
+    return this.coursesService.findCoursesAvailableForPurchase(0);
+  }
+
   @UseGuards(AuthGuard('jwt'))
   @Get('my-courses')
   async getMyCourses(@Req() req) {
@@ -60,6 +65,17 @@ export class CoursesController {
   @Get(':id')
   async getCourse(@Param('id', ParseIntPipe) id: number) {
     return this.coursesService.findOne(id);
+  }
+
+  @Get(':id/purchase/:userId')
+  async getCourseDetailToPurchase(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('userId', ParseIntPipe) userId: number
+  ) {
+    if(userId !== 0) {
+      await this.coursesService.getLinkCourse(userId, id);
+    }
+    return this.coursesService.findOne(id, true);
   }
 
   @UseGuards(AuthGuard('jwt'))

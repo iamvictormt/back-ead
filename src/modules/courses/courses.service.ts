@@ -62,7 +62,7 @@ export class CoursesService {
         modules: {
           deleteMany: {
             courseId: id,
-            id: { notIn: dto.modules.filter(m => m.id).map(m => m.id) },
+            id: { notIn: dto.modules.filter((m) => m.id).map((m) => m.id) },
           },
           upsert: dto.modules.map((m) => ({
             where: { id: m.id ?? 0 },
@@ -72,7 +72,7 @@ export class CoursesService {
               lessons: {
                 deleteMany: {
                   moduleId: m.id ?? 0,
-                  id: { notIn: m.lessons.filter(l => l.id).map(l => l.id) },
+                  id: { notIn: m.lessons.filter((l) => l.id).map((l) => l.id) },
                 },
                 upsert: m.lessons.map((l) => ({
                   where: { id: l.id ?? 0 },
@@ -116,7 +116,7 @@ export class CoursesService {
     // 🔹 Atualiza o totalLessons de todos os progress do curso
     const totalLessons = updatedCourse.modules.reduce(
       (acc, mod) => acc + mod.lessons.length,
-      0
+      0,
     );
 
     await this.prisma.progress.updateMany({
@@ -200,9 +200,9 @@ export class CoursesService {
         })),
         certificate: certificate
           ? {
-            id: certificate.id,
-            issuedAt: certificate.issuedAt.toISOString(),
-          }
+              id: certificate.id,
+              issuedAt: certificate.issuedAt.toISOString(),
+            }
           : null,
         rating: course.rating,
         studentsCount: course.studentsCount,
@@ -368,10 +368,13 @@ export class CoursesService {
     const { search, category, priceRange, page = 1, limit = 10 } = params || {};
 
     // Busca os cursos já comprados pelo usuário
-    const purchasedCourses = await this.prisma.purchase.findMany({
-      where: { userId, status: 'PAID' },
-      select: { courseId: true },
-    });
+    const purchasedCourses =
+      userId == 0
+        ? []
+        : await this.prisma.purchase.findMany({
+            where: { userId, status: 'PAID' },
+            select: { courseId: true },
+          });
 
     const purchasedCourseIds = purchasedCourses.map((pc) => pc.courseId);
 
@@ -391,7 +394,7 @@ export class CoursesService {
       ...(search && { title: { contains: search, mode: 'insensitive' } }),
       ...(category && { category }),
       ...(priceRange && { price: priceFilter }),
-      deactivatedIn: null
+      deactivatedIn: null,
     };
 
     // Paginação
@@ -417,11 +420,11 @@ export class CoursesService {
     };
   }
 
-// Método interno para criar progresso
+  // Método interno para criar progresso
   private async createProgress(userId: number, course: any) {
     const totalLessons = course.modules.reduce(
       (sum, module) => sum + module.lessons.length,
-      0
+      0,
     );
 
     return this.prisma.progress.create({
@@ -434,7 +437,7 @@ export class CoursesService {
     });
   }
 
-// Verifica se o usuário já está matriculado
+  // Verifica se o usuário já está matriculado
   private async checkAlreadyEnrolled(userId: number, courseId: number) {
     const existing = await this.prisma.purchase.findFirst({
       where: { userId, courseId },
@@ -445,8 +448,11 @@ export class CoursesService {
     }
   }
 
-// Matrícula via compra
-  async enrollStudentPurchase(userId: number, courseId: number, pricePaid: number) {
+  async enrollStudentPurchase(
+    userId: number,
+    courseId: number,
+    pricePaid: number,
+  ) {
     await this.checkAlreadyEnrolled(userId, courseId);
 
     const course = await this.prisma.course.findUnique({
@@ -466,11 +472,17 @@ export class CoursesService {
       data: { userId, courseId, pricePaid, status: 'PAID' },
     });
 
+    await this.prisma.course.update({
+      where: { id: courseId },
+      data: {
+        studentsCount: { increment: 1 },
+      },
+    });
+
     await this.createProgress(userId, course);
     return purchase;
   }
 
-// Matrícula como presente do admin
   async enrollStudentGift(userId: number, courseId: number) {
     await this.checkAlreadyEnrolled(userId, courseId);
 
@@ -488,6 +500,19 @@ export class CoursesService {
     return purchase;
   }
 
+
+  async getLinkCourse(userId, courseId: number) {
+
+    const existing = await this.prisma.purchase.findFirst({
+      where: { userId, courseId },
+    });
+
+    if(existing) {
+      throw new ConflictException('Usuário já está matriculado neste curso');
+    }
+  }
+
+
   async findAllCourses() {
     return this.prisma.course.findMany({
       include: {
@@ -501,9 +526,12 @@ export class CoursesService {
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, toPurchase: boolean = false) {
     const course = await this.prisma.course.findUnique({
-      where: { id },
+      where: {
+        id,
+        ...(toPurchase ? { deactivatedIn: { equals: null } } : {}),
+      },
       include: {
         modules: {
           orderBy: { order: 'asc' }, // ordena os módulos pelo order
@@ -522,7 +550,14 @@ export class CoursesService {
       ...course,
       modules: course.modules.map(({ courseId, ...mod }) => ({
         ...mod,
-        lessons: mod.lessons.map(({ moduleId, ...lesson }) => lesson),
+        lessons: mod.lessons.map(({ moduleId, ...lesson }) => {
+          if (toPurchase) {
+            // remove o videoUrl quando toPurchase = true
+            const { videoUrl, ...rest } = lesson;
+            return rest;
+          }
+          return lesson;
+        }),
       })),
       deactivatedIn: undefined,
       createdAt: undefined,
