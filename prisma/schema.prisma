@@ -11,19 +11,19 @@ datasource db {
 // Usuários da plataforma
 // =============================
 model User {
-  id          Int      @id @default(autoincrement())
-  name        String
-  email       String   @unique
-  password    String
-  role        Role     @default(STUDENT) // ADMIN ou STUDENT
-  country     String?
-  city        String?
-  profession  String?
-  phone       String?
-  birthDate   DateTime?
-  profilePic  String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         Int       @id @default(autoincrement())
+  name       String
+  email      String    @unique
+  password   String
+  role       Role      @default(STUDENT) // ADMIN ou STUDENT
+  country    String?
+  city       String?
+  profession String?
+  phone      String?
+  birthDate  DateTime?
+  profilePic String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   purchases    Purchase[]
   progresses   Progress[]
@@ -43,18 +43,19 @@ enum Role {
 // Cursos disponíveis na plataforma
 // =============================
 model Course {
-  id            Int       @id @default(autoincrement())
-  title         String
-  description   String
-  price         Float
-  thumbnailUrl  String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  instructor    String
-  category      String
-  rating        Float     @default(0)
-  studentsCount Int       @default(0)
-  deactivatedIn DateTime?
+  id              Int       @id @default(autoincrement())
+  title           String
+  description     String
+  price           Float
+  thumbnailUrl    String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  instructor      String
+  category        String
+  rating          Float     @default(0)
+  studentsCount   Int       @default(0)
+  deactivatedIn   DateTime?
+  previewVideoUrl String?
 
   // Relacionamentos
   modules      Module[]

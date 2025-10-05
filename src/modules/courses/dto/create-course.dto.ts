@@ -26,6 +26,10 @@ export class CreateCourseDto {
   @IsUrl(undefined, { message: 'O campo URL da Imagem de Capa deve ser uma URL válida' })
   thumbnailUrl?: string;
 
+  @IsOptional()
+  @IsUrl(undefined, { message: 'O campo Link da Preview do Video deve ser uma URL válida' })
+  previewVideoUrl?: string;
+
   @IsString()
   instructor: string;
 

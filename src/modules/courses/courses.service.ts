@@ -58,6 +58,7 @@ export class CoursesService {
         category: dto.category,
         rating: dto.rating ?? 0,
         studentsCount: dto.studentsCount ?? 0,
+        previewVideoUrl: dto.previewVideoUrl,
 
         modules: {
           deleteMany: {
@@ -534,10 +535,10 @@ export class CoursesService {
       },
       include: {
         modules: {
-          orderBy: { order: 'asc' }, // ordena os módulos pelo order
+          orderBy: { order: 'asc' },
           include: {
             lessons: {
-              orderBy: { order: 'asc' }, // ordena as aulas pelo order
+              orderBy: { order: 'asc' },
             },
           },
         },
@@ -546,24 +547,41 @@ export class CoursesService {
 
     if (!course) return null;
 
+    // Função para "criptografar" o título com asteriscos
+    const encryptTitle = () => '***********';
+
     return {
       ...course,
-      modules: course.modules.map(({ courseId, ...mod }) => ({
+      modules: course.modules.map(({ courseId, ...mod }, moduleIndex) => ({
         ...mod,
-        lessons: mod.lessons.map(({ moduleId, ...lesson }) => {
-          if (toPurchase) {
-            // remove o videoUrl quando toPurchase = true
-            const { videoUrl, ...rest } = lesson;
-            return rest;
+        lessons: mod.lessons.map(({ moduleId, ...lesson }, lessonIndex) => {
+          const { videoUrl, ...rest } = lesson;
+
+          if (toPurchase && course.price > 0) {
+            // Para os 2 primeiros módulos e 2 primeiras lessons
+            if (moduleIndex < 2 && lessonIndex < 2) {
+              return { ...rest, title: encryptTitle() };
+            }
+
+            // Para o resto, apenas "***"
+            return { ...rest, title: '***' };
           }
-          return lesson;
+
+          return toPurchase ? rest : lesson;
         }),
+        // Também aplica a criptografia ao título do módulo
+        ...(toPurchase && course.price > 0
+          ? moduleIndex < 2
+            ? { title: encryptTitle() }
+            : { title: '***' }
+          : {}),
       })),
       deactivatedIn: undefined,
       createdAt: undefined,
       updatedAt: undefined,
     };
   }
+
 
   async deactivateCourse(id: number) {
     return this.prisma.course.update({
