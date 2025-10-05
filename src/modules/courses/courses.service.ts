@@ -225,8 +225,11 @@ export class CoursesService {
         course: {
           include: {
             modules: {
+              orderBy: { order: 'asc' }, // <-- ordena módulos
               include: {
-                lessons: true,
+                lessons: {
+                  orderBy: { order: 'asc' }, // <-- ordena aulas
+                },
               },
             },
             progresses: true,
@@ -501,18 +504,15 @@ export class CoursesService {
     return purchase;
   }
 
-
   async getLinkCourse(userId, courseId: number) {
-
     const existing = await this.prisma.purchase.findFirst({
       where: { userId, courseId },
     });
 
-    if(existing) {
+    if (existing) {
       throw new ConflictException('Usuário já está matriculado neste curso');
     }
   }
-
 
   async findAllCourses() {
     return this.prisma.course.findMany({
@@ -581,7 +581,6 @@ export class CoursesService {
       updatedAt: undefined,
     };
   }
-
 
   async deactivateCourse(id: number) {
     return this.prisma.course.update({
