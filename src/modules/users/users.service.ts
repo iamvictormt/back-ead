@@ -98,8 +98,34 @@ export class UsersService {
     });
   }
 
-  async getAllUsers(page: number, limit: number) {
+  async getAllUsers(
+    page: number,
+    limit: number,
+    search?: string
+  ) {
     const skip = (page - 1) * limit;
+
+    const whereClause: any = {
+      role: 'STUDENT',
+    };
+
+    // Se houver busca, procura em name OU email
+    if (search && search.trim() !== '') {
+      whereClause.OR = [
+        {
+          name: {
+            contains: search,
+            mode: 'insensitive',
+          },
+        },
+        {
+          email: {
+            contains: search,
+            mode: 'insensitive',
+          },
+        },
+      ];
+    }
 
     const [users, total] = await Promise.all([
       this.prisma.user.findMany({
@@ -113,13 +139,11 @@ export class UsersService {
           role: true,
           createdAt: true,
         },
+        where: whereClause,
         orderBy: { createdAt: 'desc' },
-        where: {
-          role: 'STUDENT'
-        }
       }),
       this.prisma.user.count({
-        where: { role: 'STUDENT' },
+        where: whereClause,
       }),
     ]);
 

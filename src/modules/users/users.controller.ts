@@ -1,7 +1,9 @@
 import {
   BadRequestException,
   Body,
-  Controller, Delete, ForbiddenException,
+  Controller,
+  Delete,
+  ForbiddenException,
   Get,
   Param,
   Patch,
@@ -25,11 +27,17 @@ export class UsersController {
   async getAllUsers(
     @Query('page') page: string,
     @Query('limit') limit: string,
+    @Query('search') search: string,
+
   ) {
     const pageNumber = parseInt(page) || 1;
     const pageSize = parseInt(limit) || 20;
 
-    return this.usersService.getAllUsers(pageNumber, pageSize);
+    return this.usersService.getAllUsers(
+      pageNumber,
+      pageSize,
+      search
+    );
   }
 
   @UseGuards(AuthGuard('jwt'))

@@ -16,6 +16,7 @@ export class PurchasesService {
 
     const course = await this.prisma.course.findUnique({
       where: { id: courseId },
+      include: { modules: { include: { lessons: true } } },
     });
     if (!course) throw new NotFoundException('Curso não encontrado');
 
