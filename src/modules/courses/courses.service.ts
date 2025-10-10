@@ -424,8 +424,42 @@ export class CoursesService {
     };
   }
 
+  async findCoursesNotPurchasedByUser(userId: number) {
+    // 1️⃣ Buscar todos os cursos comprados por esse usuário
+    const purchases = await this.prisma.purchase.findMany({
+      where: { userId },
+      select: { courseId: true },
+    });
+
+    const purchasedIds = purchases.map((p) => p.courseId);
+
+    // 2️⃣ Buscar cursos que NÃO estão nessa lista
+    const availableCourses = await this.prisma.course.findMany({
+      where: {
+        deactivatedIn: null,
+        id: {
+          notIn: purchasedIds.length > 0 ? purchasedIds : [0], // evita erro se estiver vazio
+        },
+      },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        price: true,
+        thumbnailUrl: true,
+        instructor: true,
+        category: true,
+        rating: true,
+        studentsCount: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return availableCourses;
+  }
+
   // Método interno para criar progresso
-  private async createProgress(userId: number, course: any) {
+  public async createProgress(userId: number, course: any) {
     const totalLessons = course.modules.reduce(
       (sum, module) => sum + module.lessons.length,
       0,

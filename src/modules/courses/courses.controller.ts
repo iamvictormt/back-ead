@@ -41,6 +41,13 @@ export class CoursesController {
     return this.coursesService.findCoursesAvailableForPurchase(userId);
   }
 
+  @UseGuards(AuthGuard('jwt'))
+  @Get('available/:userId')
+  @Role('ADMIN')
+  async getAvailableCoursesByUserId(@Param('userId', ParseIntPipe) userId: number) {
+    return this.coursesService.findCoursesNotPurchasedByUser(userId);
+  }
+
   @Get('active')
   async getActiveCourses(@Req() req) {
     return this.coursesService.findCoursesAvailableForPurchase(0);
