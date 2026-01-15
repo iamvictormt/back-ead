@@ -1,6 +1,7 @@
 // certificate.service.ts
 import { Injectable } from '@nestjs/common';
-import * as puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core';
+import chromium from '@sparticuz/chromium';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { join } from 'path';
 import { readFile } from 'fs/promises';
@@ -44,7 +45,9 @@ export class CertificateService {
 
     // Inicializa o Puppeteer
     const browser = await puppeteer.launch({
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      args: chromium.args,
+      executablePath: await chromium.executablePath(),
+      headless: true,
     });
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'networkidle0' });
